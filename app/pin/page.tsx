@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserSession, logoutUser } from '@/utils/storage';
@@ -200,17 +199,6 @@ export default function PinPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          {/* Logo */}
-          <div className="flex justify-center">
-            <Image 
-              src="/images/logomkasirijo.png" 
-              alt="MKASIR" 
-              width={100} 
-              height={100} 
-              className="w-24 h-24 object-contain" 
-            />
-          </div>
-
           {/* Title */}
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold text-gray-900">Masukkan PIN Kasir</h1>
