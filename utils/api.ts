@@ -2,12 +2,12 @@
  * Konfigurasi API Base URL
  * 
  * Untuk mengubah URL API, edit nilai di bawah ini:
- * - Ganti 'https://your-api-url.com/api' dengan URL API yang sebenarnya
+ * - Ganti 'https://api-mkasir-retail.tip2.co' dengan URL API yang sebenarnya
  * - Atau set environment variable NEXT_PUBLIC_API_URL saat build
  * 
- * Contoh: 'https://api.example.com/api' atau 'http://localhost:8000/api'
+ * Contoh: 'https://api-mkasir-retail.tip2.co' atau 'http://localhost:8000/api'
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://your-api-url.com/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-mkasir-retail.tip2.co';
 
 /**
  * Interface untuk request login
