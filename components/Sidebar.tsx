@@ -89,10 +89,50 @@ interface SidebarProps {
   theme?: 'blue' | 'green' | 'pink' | 'purple';
 }
 
-export default function Sidebar({ isOverlay = false, theme = 'green' }: SidebarProps) {
+export default function Sidebar({ isOverlay = false, theme: themeProp }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [userLevel, setUserLevel] = useState<string>('');
+  
+  // Load theme from localStorage if not provided as prop
+  const [theme, setTheme] = useState<'blue' | 'green' | 'pink' | 'purple'>(() => {
+    if (themeProp) return themeProp;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('mk-selected-theme');
+      if (stored && ['blue', 'green', 'pink', 'purple'].includes(stored)) {
+        return stored as 'blue' | 'green' | 'pink' | 'purple';
+      }
+    }
+    return 'green';
+  });
+
+  // Update theme when prop changes or localStorage changes
+  useEffect(() => {
+    if (themeProp) {
+      setTheme(themeProp);
+    } else if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('mk-selected-theme');
+      if (stored && ['blue', 'green', 'pink', 'purple'].includes(stored)) {
+        setTheme(stored as 'blue' | 'green' | 'pink' | 'purple');
+      }
+    }
+  }, [themeProp]);
+
+  // Listen for storage changes (when theme is changed in another tab/page)
+  useEffect(() => {
+    if (typeof window === 'undefined' || themeProp) return;
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'mk-selected-theme' && e.newValue) {
+        if (['blue', 'green', 'pink', 'purple'].includes(e.newValue)) {
+          setTheme(e.newValue as 'blue' | 'green' | 'pink' | 'purple');
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [themeProp]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -180,7 +220,11 @@ export default function Sidebar({ isOverlay = false, theme = 'green' }: SidebarP
       {/* Logo */}
       <div className="mb-4 md:mb-5 lg:mb-6">
         <div className={`flex items-center gap-3 w-full px-4 py-4 rounded-xl bg-gradient-to-br ${themeClasses.activeGradient} shadow-lg ${themeClasses.activeShadow} justify-center relative`}>
-          <span className="text-white font-bold text-xl">Your Kasir</span>
+          <img 
+            src="/images/logomkasir.png" 
+            alt="MKasir Logo" 
+            className="h-10 object-contain"
+          />
           {/* Badge PRO */}
           {userLevel && userLevel.toLowerCase().includes('pro') && (
             <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">

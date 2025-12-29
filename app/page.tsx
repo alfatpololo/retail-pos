@@ -128,9 +128,24 @@ export default function POSPage() {
   const [showRingkasanTutup, setShowRingkasanTutup] = useState(false);
   const [tutupKasirData, setTutupKasirData] = useState<TutupKasirData | null>(null);
   
-  // Color theme state
-  const [selectedTheme, setSelectedTheme] = useState<'blue' | 'green' | 'pink' | 'purple'>('green');
+  // Color theme state - load from localStorage
+  const [selectedTheme, setSelectedTheme] = useState<'blue' | 'green' | 'pink' | 'purple'>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('mk-selected-theme');
+      if (stored && ['blue', 'green', 'pink', 'purple'].includes(stored)) {
+        return stored as 'blue' | 'green' | 'pink' | 'purple';
+      }
+    }
+    return 'green';
+  });
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  // Save theme to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mk-selected-theme', selectedTheme);
+    }
+  }, [selectedTheme]);
 
   // Helper function to get theme classes
   const getThemeClasses = (theme: 'blue' | 'green' | 'pink' | 'purple') => {
@@ -218,25 +233,43 @@ export default function POSPage() {
   const theme = getThemeClasses(selectedTheme);
   
   useEffect(() => {
-    // Cek apakah user sudah login dan PIN sudah diverifikasi
+    // Skip authentication - langsung ke dashboard
     const currentUserStr = localStorage.getItem('currentUser');
     
+    // Set dummy user data jika belum ada
     if (!currentUserStr) {
-      router.push('/login');
+      const dummyUser = {
+        id: '1',
+        name: 'Kasir',
+        phone: '081234567890',
+        loggedIn: true,
+        pinVerified: true,
+        level: 'Kasir',
+        stall_id: 1,
+        nama_kios: 'Toko',
+        permissions: [],
+      };
+      localStorage.setItem('currentUser', JSON.stringify(dummyUser));
+      
+      setSelectedCashier({
+        id: '1',
+        name: 'Kasir',
+        initials: 'KA',
+        level: 'Kasir',
+      });
+      
+      setIsChecking(false);
       return;
     }
 
     try {
       const currentUser = JSON.parse(currentUserStr);
       
-      if (!currentUser.loggedIn) {
-        router.push('/login');
-        return;
-      }
-
+      // Pastikan user sudah verified
       if (!currentUser.pinVerified) {
-        router.push('/pin');
-        return;
+        currentUser.pinVerified = true;
+        currentUser.loggedIn = true;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
       }
       
       const name: string = currentUser.name || 'Kasir';
@@ -257,7 +290,28 @@ export default function POSPage() {
       setIsChecking(false);
     } catch (error) {
       console.error('Error checking auth:', error);
-      router.push('/login');
+      // Set dummy user jika error
+      const dummyUser = {
+        id: '1',
+        name: 'Kasir',
+        phone: '081234567890',
+        loggedIn: true,
+        pinVerified: true,
+        level: 'Kasir',
+        stall_id: 1,
+        nama_kios: 'Toko',
+        permissions: [],
+      };
+      localStorage.setItem('currentUser', JSON.stringify(dummyUser));
+      
+      setSelectedCashier({
+        id: '1',
+        name: 'Kasir',
+        initials: 'KA',
+        level: 'Kasir',
+      });
+      
+      setIsChecking(false);
     }
   }, [router]);
 
@@ -1618,10 +1672,9 @@ export default function POSPage() {
                 </div>
               )}
               {!loadingProducts && !errorProducts && filteredProducts.map((product) => (
-                <button
+                <div
                   key={product.id}
-                  onClick={() => handleProductClick(product)}
-                  disabled={product.stock <= 0}
+                  onClick={() => product.stock > 0 && handleProductClick(product)}
                   className={`bg-white rounded-2xl border-2 overflow-hidden transition-all duration-300 text-left active:scale-[0.98] group ${
                     product.stock > 0
                       ? 'hover:shadow-xl hover:border-emerald-400 cursor-pointer border-gray-200 shadow-sm'
@@ -1719,7 +1772,7 @@ export default function POSPage() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
           </div>
         </div>

@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { convertTo62Format } from '@/utils/phone';
+import { register } from '@/utils/api';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -12,58 +14,61 @@ export default function RegisterPage() {
     confirm: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
-    if (form.password !== form.confirm) {
-      alert('Konfirmasi password tidak cocok');
-      return;
-    }
-
-    if (form.password.length < 6) {
-      alert('Password minimal 6 karakter');
+    // Validasi
+    if (!form.name || form.name.trim().length < 3) {
+      setError('Nama minimal 3 karakter');
       return;
     }
 
     if (!form.phone || form.phone.length < 10) {
-      alert('Nomor HP tidak valid');
+      setError('Nomor HP tidak valid');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError('Password minimal 6 karakter');
+      return;
+    }
+
+    if (form.password !== form.confirm) {
+      setError('Konfirmasi password tidak cocok');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Simpan user ke localStorage
-      const storedUsers = localStorage.getItem('users');
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-      
-      // Cek apakah nomor HP sudah terdaftar
-      const existingUser = users.find((u: any) => u.phone === form.phone);
-      if (existingUser) {
-        alert('Nomor HP sudah terdaftar. Silakan login.');
+      // Konversi nomor telepon ke format 62
+      const formattedPhone = convertTo62Format(form.phone);
+
+      // Panggil API register
+      const response = await register({
+        nama: form.name.trim(),
+        notelp: formattedPhone,
+        password: form.password,
+        password_confirmation: form.confirm,
+        device: 'web',
+        version: '1.0.0',
+      });
+
+      // Cek apakah register berhasil
+      if (response.success) {
+        alert('Registrasi berhasil! Silakan login.');
+        router.push('/login');
+      } else {
+        setError(response.message || 'Registrasi gagal');
         setIsLoading(false);
-        return;
       }
-
-      const newUser = {
-        id: `USER-${Date.now()}`,
-        name: form.name,
-        phone: form.phone,
-        password: form.password, // Dalam production, password harus di-hash
-        pin: '123456', // Default PIN untuk kasir (dalam production, ini harus di-set oleh admin)
-        createdAt: new Date().toISOString(),
-      };
-
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-
-      alert('Registrasi berhasil! Silakan login.');
-      router.push('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Register error:', error);
-      alert('Terjadi kesalahan saat registrasi');
+      setError(error.message || 'Terjadi kesalahan saat registrasi. Pastikan API URL sudah benar.');
       setIsLoading(false);
     }
   };
@@ -72,12 +77,25 @@ export default function RegisterPage() {
     <div className="min-h-screen flex bg-gray-50">
       {/* Left: Form */}
       <div className="w-full md:w-1/2 lg:w-5/12 px-6 sm:px-10 lg:px-14 py-10 flex flex-col justify-center space-y-8 bg-white">
+        <div className="flex flex-col items-center mb-4">
+          <img 
+            src="/images/logomkasir.png" 
+            alt="MKasir Logo" 
+            className="h-16 object-contain mb-4"
+          />
+        </div>
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Daftar Akun Baru</h1>
           <p className="text-sm text-gray-600">Masukkan data dasar untuk membuat akun.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Nama Lengkap</label>
             <input

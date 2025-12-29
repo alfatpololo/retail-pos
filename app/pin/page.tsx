@@ -67,21 +67,35 @@ export default function PinPage() {
   }, [router]);
 
   useEffect(() => {
-    // Cek apakah user sudah login menggunakan session storage
-    const userSession = getUserSession();
+    // Skip PIN verification - langsung redirect ke dashboard
+    const dummyUser = {
+      id: '1',
+      name: 'Kasir',
+      phone: '081234567890',
+      loggedIn: true,
+      pinVerified: true,
+      level: 'Kasir',
+      stall_id: 1,
+      nama_kios: 'Toko',
+      permissions: [],
+    };
+    localStorage.setItem('currentUser', JSON.stringify(dummyUser));
+    router.push('/');
+    return;
+    
+    // Skip authentication check - code below is disabled
+    /* const userSession = getUserSession();
     const currentUser = localStorage.getItem('currentUser');
     
-    // Jika tidak ada session dan tidak ada currentUser, redirect ke login
     if (!userSession && !currentUser) {
       router.push('/login');
       return;
     }
 
-    // Fetch cashiers jika belum ada
     if (cashiers.length === 0 && !isLoadingCashiers) {
       fetchCashiers();
-    }
-  }, [router, cashiers.length, isLoadingCashiers, fetchCashiers]);
+    } */
+  }, [router]);
 
   const handlePinChange = (value: string) => {
     // Hanya terima angka dan maksimal 6 digit

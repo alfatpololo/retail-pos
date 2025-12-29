@@ -2,12 +2,17 @@
  * Konfigurasi API Base URL
  * 
  * Untuk mengubah URL API, edit nilai di bawah ini:
- * - Ganti 'https://api-mkasir-retail.tip2.co' dengan URL API yang sebenarnya
+ * - Ganti 'https://api-mkasir-retail.tip2.co/api/v1' dengan URL API yang sebenarnya
  * - Atau set environment variable NEXT_PUBLIC_API_URL saat build
  * 
- * Contoh: 'https://api-mkasir-retail.tip2.co' atau 'http://localhost:8000/api'
+ * Contoh: 'https://api-mkasir-retail.tip2.co/api/v1' atau 'http://localhost:8000/api/v1'
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-mkasir-retail.tip2.co';
+let baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api-mkasir-retail.tip2.co/api/v1';
+
+// Pastikan tidak ada trailing slash
+baseUrl = baseUrl.replace(/\/$/, '');
+
+export const API_BASE_URL = baseUrl;
 
 /**
  * Interface untuk request login
@@ -182,6 +187,68 @@ export async function getUserStall(jwt: string): Promise<UserStallResponse> {
       throw error;
     }
     throw new Error('Terjadi kesalahan saat mengambil data users');
+  }
+}
+
+/**
+ * Interface untuk request register
+ */
+export interface RegisterRequest {
+  nama: string;
+  notelp: string;
+  password: string;
+  password_confirmation: string;
+  device?: string;
+  version?: string;
+}
+
+/**
+ * Interface untuk response register
+ */
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user_id: number;
+    nama: string;
+    notelp: string;
+    level: string;
+    stall_id?: number;
+  };
+}
+
+/**
+ * Fungsi untuk melakukan register
+ */
+export async function register(credentials: RegisterRequest): Promise<RegisterResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nama: credentials.nama,
+        notelp: credentials.notelp,
+        password: credentials.password,
+        password_confirmation: credentials.password_confirmation,
+        device: credentials.device || 'web',
+        version: credentials.version || '1.0.0',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data: RegisterResponse = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Terjadi kesalahan saat melakukan registrasi');
   }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { convertTo62Format } from '@/utils/phone';
 import { login } from '@/utils/api';
@@ -13,6 +13,23 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // Skip login - langsung redirect ke dashboard
+  useEffect(() => {
+    const dummyUser = {
+      id: '1',
+      name: 'Kasir',
+      phone: '081234567890',
+      loggedIn: true,
+      pinVerified: true,
+      level: 'Kasir',
+      stall_id: 1,
+      nama_kios: 'Toko',
+      permissions: [],
+    };
+    localStorage.setItem('currentUser', JSON.stringify(dummyUser));
+    router.push('/');
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +93,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex bg-gray-50">
       {/* Left: Form */}
       <div className="w-full md:w-1/2 lg:w-5/12 px-6 sm:px-10 lg:px-14 py-10 flex flex-col justify-center space-y-8 bg-white">
+        <div className="flex flex-col items-center mb-4">
+          <img 
+            src="/images/logomkasir.png" 
+            alt="MKasir Logo" 
+            className="h-16 object-contain mb-4"
+          />
+        </div>
         <div className="space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Masuk ke Akun</h1>
           <p className="text-sm text-gray-600">Gunakan nomor HP dan kata sandi Anda.</p>

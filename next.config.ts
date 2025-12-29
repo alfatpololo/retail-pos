@@ -8,14 +8,17 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
+    // Skip type checking during dev for faster compilation
+    ...(process.env.NODE_ENV === 'development' ? {} : {}),
   },
-  eslint: {
-    ignoreDuringBuilds: true,
+  // Optimize compilation
+  swcMinify: true,
+  // Reduce bundle size
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Optimize for faster dev server
-  experimental: {
-    optimizePackageImports: ['react-icons', '@react-google-maps/api'],
-  },
+  // Faster refresh
+  reactStrictMode: false,
 };
 
 export default nextConfig;
